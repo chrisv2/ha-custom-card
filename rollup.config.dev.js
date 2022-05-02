@@ -10,7 +10,7 @@ import { ignoreSelectFiles } from './elements/ignore/select';
 import { ignoreSwitchFiles } from './elements/ignore/switch';
 
 export default {
-  input: ['src/boilerplate-card.ts'],
+  input: ['src/uplink-switcher.ts'],
   output: {
     dir: './dist',
     format: 'es',
@@ -36,4 +36,13 @@ export default {
       files: [...ignoreTextfieldFiles, ...ignoreSelectFiles, ...ignoreSwitchFiles].map((file) => require.resolve(file)),
     }),
   ],
+  onwarn: function(warning) {
+    // Skip certain warnings
+
+    // should intercept ... but doesn't in some rollup versions
+    if ( warning.code === 'THIS_IS_UNDEFINED' ) { return; }
+
+    // console.warn everything else
+    console.warn( warning.message );
+}
 };
