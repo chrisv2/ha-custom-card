@@ -61,6 +61,7 @@ export class EnterPassword extends LitElement {
     protected setNetwork(): void {
         this.hass.connection.sendMessagePromise({
             type: 'uplink/select_network',
+            entity: this.entity,
             ssid: this.ssid,
             password: this.getInputField()?.value
         }).then(
