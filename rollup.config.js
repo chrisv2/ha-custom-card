@@ -40,9 +40,11 @@ const plugins = [
 export default [
   {
     input: 'src/uplink-switcher.ts',
+    preserveModules: false,
     output: {
       dir: 'dist',
       format: 'es',
+      manualChunks: () => 'uplink-switcher.js'
     },
     plugins: [...plugins],
   },
