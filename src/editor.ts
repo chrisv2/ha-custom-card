@@ -28,6 +28,9 @@ export class UplinkSwitcherEditor extends ScopedRegistryHost(LitElement) impleme
   };
 
   public setConfig(config: UplinkSwitcherCardConfig): void {
+
+    console.log("setConfig", config);
+
     this._config = config;
 
     this.loadCardHelpers();

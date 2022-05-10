@@ -34,8 +34,9 @@ export interface NetworkEntry {
   level: number;
   netid: string;
   ssid: string;
+  needs_psk: boolean;
+  has_psk: boolean;
   bssids: { [key: string]: BSSEntry };
-
 }
 
 export interface NetworkStatus {

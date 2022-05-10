@@ -54,6 +54,7 @@ export class UplinkSwitcher extends LitElement {
     this.config = {
       ...config,
     };
+    console.log("setConfig", config);
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
@@ -77,6 +78,14 @@ export class UplinkSwitcher extends LitElement {
     } else if (level < -65) {
       icon = 'mdi:wifi-strength-3'
     }
+    if (network['needs_psk']) {
+      if (network['has_psk']) {
+        icon += '-lock-open'
+      } else {
+        icon += '-lock'
+      }
+    }
+
     return html`<ha-icon icon=${icon}></ha-icon>`
   }
 
@@ -84,7 +93,6 @@ export class UplinkSwitcher extends LitElement {
     const entity = this.config.entity,
           stateObj = (entity) ? this.hass.states[entity] : null;
     return stateObj;
-
   }
 
   protected getNetworks(): Array<NetworkEntry>{
@@ -127,23 +135,32 @@ export class UplinkSwitcher extends LitElement {
 
     const networks = this.getNetworks(),
       status = this.getStatus(),
-      is_connected = status.connected,
       ssid = status?.ssid;
+    let icon = 'mdi:wifi-off',
+        text = 'Disconnected';
+    if (status['status'] == 'Connecting') {
+      icon = 'mdi:wifi-refresh'
+      text = 'Connecting to ' + status['switching_to'];
+    }
+    if (status['status'] == 'Connected') {
+      icon = 'mdi:wifi-check'
+      text = 'Connected to ' + ssid;
+    }
 
     return html`
       <ha-card
         @action=${this._handleAction}
         .actionHandler=${actionHandler({
-          hasHold: hasAction(this.config.hold_action),
+          hasHold: true,
           hasDoubleClick: hasAction(this.config.double_tap_action),
         })}
         tabindex="0"
         .label=${`Boilerplate: ${this.config.entity || 'No Entity Defined'}`}
       >
       <ha-icon-button>
-        <ha-icon icon=${(is_connected)?'mdi:wifi-check':'mdi:wifi-off'}></ha-icon>
+        <ha-icon icon=${icon}></ha-icon>
       </ha-icon-button>
-      <h2>${(ssid)?ssid:"(not connected)"}</h2>
+      <h2>${text}</h2>
       <mwc-menu class="network-list">
         ${this.renderWifiList(networks)}
       </mwc-menu>
@@ -155,8 +172,8 @@ export class UplinkSwitcher extends LitElement {
     const network = this.getNetwork(ssid);
 
     evt.stopPropagation();
-    if (network.netid) {
-      // trigger switch right away
+    if (!network.needs_psk || network.has_psk) {
+      // trigger switch right away. TODO: what if PSK is wrong?
       this.hass.connection.sendMessagePromise({
         type: 'uplink/select_network',
         entity: this.config.entity,
@@ -168,8 +185,9 @@ export class UplinkSwitcher extends LitElement {
     }
   }
 
-  private _handleAction(ev: ActionHandlerEvent): void {
+  private async _handleAction(ev: ActionHandlerEvent): Promise<void> {
     if (this.hass && this.config && ev.detail.action) {
+      console.log(ev.detail.action);
       if (ev.detail.action == 'tap') {
         const anchor = this.shadowRoot?.querySelector('h2'),
               menu = this.shadowRoot?.querySelector('.network-list');
@@ -178,6 +196,9 @@ export class UplinkSwitcher extends LitElement {
           menu['corner'] = 'BOTTOM_START';
           menu['open'] = true;
         }
+      } else if (ev.detail.action == 'hold') {
+        await import('./manage-networks');
+        popUp("Manage Networks", { type: "custom:manage-networks", entity: this.config.entity })
       } else {
         handleAction(this, this.hass, this.config, ev.detail.action);
       }

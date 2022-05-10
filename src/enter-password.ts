@@ -41,7 +41,7 @@ export class EnterPassword extends LitElement {
         return html`<ha-card>
             <div class=card-header style="text-align: center;"><ha-icon icon="mdi:wifi-lock"></ha-icon> ${this.ssid}</div>
             <div class=card-content>
-                <ha-textfield .icon=${true} label="Password" ${ref(this.inputChanged)}>
+                <ha-textfield .icon=${true} label="Password" ${ref(this.inputChanged)} minlength=8>
                     <slot name="prefix" slot="leadingIcon">
                       <ha-icon icon="mdi:form-textbox-password"></ha-icon>
                     </slot>
